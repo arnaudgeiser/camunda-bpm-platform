@@ -112,7 +112,6 @@ module.exports = [
             // Only add URL Params if they have a value
             params.urlParams.taskId = params.taskId;
           }
-
           camForm = new CamForm(params);
         }
 
