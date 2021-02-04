@@ -50,14 +50,22 @@ module.exports = [
       template: '',
 
       link: function($scope, $element, attrs, formController) {
-        formController.notifyFormInitialized();
+        let result;
+        const Task = camAPI.resource('task');
+        const ProcessDefinition = camAPI.resource('process-definition');
 
-        var Task = camAPI.resource('task');
+        const options = formController.getOptions();
+        options.hideCompleteButton = true;
+        options.hideStartButton = true;
 
         $scope.variables = [];
 
         const loadVariables = function() {
-          $scope.variablesLoaded = true;
+          if (!formController.getParams().taskId) {
+            console.log(formController.getParams());
+            return;
+          }
+
           return Task.formVariables({
             id: formController.getParams().taskId,
             deserializeValues: false
@@ -75,30 +83,6 @@ module.exports = [
                   type: value.type,
                   fixedName: true
                 });
-
-                // if (value.type === 'Object') {
-                //   $scope.variables.push({
-                //     name: name,
-                //     value: value.value,
-                //     type: value.type,
-                //     valueInfo: value.valueInfo
-                //   });
-                // }
-
-                // if (value.type === 'File') {
-                //   $scope.variables.push({
-                //     name: name,
-                //     type: value.type,
-                //     downloadUrl: Uri.appUri(
-                //       'engine://engine/:engine/task/' +
-                //         formController.getParams().taskId +
-                //         '/variables/' +
-                //         name +
-                //         '/data'
-                //     ),
-                //     readonly: true
-                //   });
-                // }
               });
             })
             .catch(err => {
@@ -126,8 +110,12 @@ module.exports = [
             schema,
             data
           });
+          formController.notifyFormInitialized();
 
           form.on('submit', event => {
+            if (Object.keys(event.errors).length) {
+              return;
+            }
             const variablePayload = Object.entries(event.data).reduce(
               (res, [key, value]) => {
                 res[key] = {value};
@@ -136,12 +124,34 @@ module.exports = [
               {}
             );
 
-            Task.submitForm({
-              id: formController.getParams().taskId,
-              variables: variablePayload
-            }).then(() => {
-              formController.attemptComplete();
-            });
+            console.log(variablePayload);
+
+            if (formController.getParams().taskId) {
+              console.log('submit it');
+              Task.submitForm({
+                id: formController.getParams().taskId,
+                variables: variablePayload
+              })
+                .then(() => {
+                  formController.attemptComplete();
+                })
+                .catch(err => {
+                  console.error(err);
+                });
+            } else {
+              ProcessDefinition.submitForm({
+                id: formController.getParams().processDefinitionId,
+                variables: variablePayload
+              })
+                .then(res => {
+                  console.log(res);
+                  result = res;
+                  formController.attemptComplete(res);
+                })
+                .catch(err => {
+                  console.error(err);
+                });
+            }
           });
         }
 
@@ -155,7 +165,7 @@ module.exports = [
         }
 
         formController.registerCompletionHandler(cb => {
-          cb();
+          cb(null, result);
         });
 
         $scope.$watch('asynchronousFormKey', handleAsynchronousFormKey, true);

@@ -25,6 +25,14 @@ var template = fs.readFileSync(
 
 var angular = require('../../../../../../../camunda-commons-ui/vendor/angular');
 
+var DEFAULT_OPTIONS = {
+  hideCompleteButton: false,
+  hideLoadVariablesButton: false,
+  disableCompleteButton: false,
+  disableForm: false,
+  disableAddVariableButton: false
+};
+
 var Controller = [
   '$scope',
   '$location',
@@ -39,13 +47,7 @@ var Controller = [
 
     var errorHandler = $scope.errorHandler;
 
-    var DEFAULT_OPTIONS = ($scope.options = {
-      hideCompleteButton: false,
-      hideLoadVariablesButton: false,
-      disableCompleteButton: false,
-      disableForm: false,
-      disableAddVariableButton: false
-    });
+    $scope.options = angular.copy(DEFAULT_OPTIONS);
 
     var taskFormData = $scope.taskData.newChild($scope);
 
@@ -87,6 +89,7 @@ var Controller = [
       function(task, isAssignee) {
         if (task && task.id) {
           if (task.id !== $scope.task.id) {
+            console.log('resset options', DEFAULT_OPTIONS);
             // Only reset options when the task changed, not on assignment
             $scope.options = angular.copy(DEFAULT_OPTIONS);
           }

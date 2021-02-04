@@ -206,6 +206,7 @@ module.exports = function() {
         // completion /////////////////////////////////////////////
 
         var completionCallback = function(err, result) {
+          console.log(err, result);
           $scope.onFormCompletionCallback(err, result);
           $scope.completeInProgress = false;
         };
@@ -249,6 +250,11 @@ module.exports = function() {
 
         this.notifyFormInitialized = function() {
           $scope.$loaded = true;
+
+          var phase = $scope.$root.$$phase;
+          if (phase !== '$apply' && phase !== '$digest') {
+            $scope.$apply();
+          }
         };
 
         this.notifyFormInitializationFailed = function(error) {
