@@ -125,6 +125,7 @@ public class BpmnParse extends Parse {
   public static final String PROPERTYNAME_CLASS = "class";
   public static final String PROPERTYNAME_EXPRESSION = "expression";
   public static final String PROPERTYNAME_DELEGATE_EXPRESSION = "delegateExpression";
+  public static final String PROPERTYNAME_CLOJURE = "clojure";
   public static final String PROPERTYNAME_VARIABLE_MAPPING_CLASS = "variableMappingClass";
   public static final String PROPERTYNAME_VARIABLE_MAPPING_DELEGATE_EXPRESSION = "variableMappingDelegateExpression";
   public static final String PROPERTYNAME_RESOURCE = "resource";
@@ -2131,6 +2132,7 @@ public class BpmnParse extends Parse {
     String className = serviceTaskElement.attributeNS(CAMUNDA_BPMN_EXTENSIONS_NS, PROPERTYNAME_CLASS);
     String expression = serviceTaskElement.attributeNS(CAMUNDA_BPMN_EXTENSIONS_NS, PROPERTYNAME_EXPRESSION);
     String delegateExpression = serviceTaskElement.attributeNS(CAMUNDA_BPMN_EXTENSIONS_NS, PROPERTYNAME_DELEGATE_EXPRESSION);
+    String clojure = serviceTaskElement.attributeNS(CAMUNDA_BPMN_EXTENSIONS_NS, PROPERTYNAME_CLOJURE);
     String resultVariableName = parseResultVariable(serviceTaskElement);
 
     parseAsynchronousContinuationForActivity(serviceTaskElement, activity);
@@ -2151,6 +2153,8 @@ public class BpmnParse extends Parse {
       }
       activity.setActivityBehavior(new ClassDelegateActivityBehavior(className, parseFieldDeclarations(serviceTaskElement)));
 
+    } else if(clojure != null) {
+      activity.setActivityBehavior(new ClojureDelegateActivityBehavior(clojure, resultVariableName));
     } else if (delegateExpression != null) {
       if (resultVariableName != null) {
         addError("'resultVariableName' not supported for " + elementName + " elements using 'delegateExpression'", serviceTaskElement);
